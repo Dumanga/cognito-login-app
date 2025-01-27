@@ -19,7 +19,7 @@ const App = () => {
       const clientId = "5is7m8qlgsk60m7seu3sfqnune";
       const responseType = "token";
       const scope = "email openid profile";
-      const redirectUri = "http://localhost:3000";
+      const redirectUri = "https://dumanga.github.io/cognito-login-app/";
 
       const cognitoLoginUrl = `https://${userPool}.auth.${awsRegion}.amazoncognito.com/login?client_id=${clientId}&response_type=${responseType}&scope=${scope}&redirect_uri=${redirectUri}`;
       window.location.href = cognitoLoginUrl; 
