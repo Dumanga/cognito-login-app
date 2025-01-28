@@ -24,8 +24,9 @@ const App = () => {
 
     try {
       const payload = JSON.parse(atob(parts[1]));
-      const expire = payload.expire * 1000;
-      return expire > Date.now();
+      console.log(payload);
+      const exp = payload.exp * 1000;
+      return exp > Date.now();
     } catch (error) {
       return false;
     }
