@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
-import { Typography, Box, CircularProgress, Card, CardContent } from "@mui/material";
+import { Typography, Box, CircularProgress, Card, CardContent, Button } from "@mui/material";
 import axios from "axios";
 
 const App = () => {
@@ -74,6 +74,11 @@ const App = () => {
     }
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    window.location.reload(); 
+  };
+
   return (
     <Box
       sx={{
@@ -96,6 +101,14 @@ const App = () => {
           <CardContent>
             <Typography variant="h4">Welcome, {userInfo.name}</Typography>
             <Typography variant="body1">Email: {userInfo.email}</Typography>
+            <Button
+              variant="contained"
+              color="error"
+              sx={{ marginTop: 2 }}
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
           </CardContent>
         </Card>
       ) : (
