@@ -7,6 +7,15 @@ const App = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // because need to use these details in multiple places
+  const CONFIG = {
+    userPool: "hexagon-imi",
+    awsRegion: "ap-southeast-1",
+    clientId: "5is7m8qlgsk60m7seu3sfqnune",
+    redirectUri: "http://localhost:3000",
+    logoutUri: "http://localhost:3000/"
+  };
+
   const getTokenFromURL = () => {
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
     const token = hashParams.get("access_token");
@@ -24,7 +33,6 @@ const App = () => {
 
     try {
       const payload = JSON.parse(atob(parts[1]));
-      console.log(payload);
       const exp = payload.exp * 1000;
       return exp > Date.now();
     } catch (error) {
@@ -33,12 +41,9 @@ const App = () => {
   };
 
   const redirectToCognito = () => {
-    const userPool = "hexagon-imi";
-    const awsRegion = "ap-southeast-1";
-    const clientId = "5is7m8qlgsk60m7seu3sfqnune";
+    const { userPool, awsRegion, clientId, redirectUri } = CONFIG;
     const responseType = "token";
     const scope = "email openid profile";
-    const redirectUri = "http://localhost:3000";
 
     const cognitoLoginUrl = `https://${userPool}.auth.${awsRegion}.amazoncognito.com/login?client_id=${clientId}&response_type=${responseType}&scope=${scope}&redirect_uri=${redirectUri}`;
     window.location.href = cognitoLoginUrl;
@@ -46,7 +51,8 @@ const App = () => {
 
   const fetchUserInfo = async (token) => {
     try {
-      const response = await axios.get("https://hexagon-imi.auth.ap-southeast-1.amazoncognito.com/oauth2/userInfo", {
+      const { userPool, awsRegion } = CONFIG;
+      const response = await axios.get(`https://${userPool}.auth.${awsRegion}.amazoncognito.com/oauth2/userInfo`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -54,6 +60,7 @@ const App = () => {
       setUserInfo(response.data);
     } catch (error) {
       console.error("Error fetching user info:", error);
+      setUserInfo(null);
     } finally {
       setLoading(false);
     }
@@ -69,15 +76,37 @@ const App = () => {
       if (token && isValidToken(token)) {
         fetchUserInfo(token);
       } else {
-        redirectToCognito();
+        setLoading(false);
       }
     }
   }, []);
 
   const handleLogout = () => {
+    const { userPool, awsRegion, clientId, logoutUri } = CONFIG;
     localStorage.removeItem("access_token");
-    window.location.reload(); 
+    
+    const cognitoLogoutUrl = `https://${userPool}.auth.${awsRegion}.amazoncognito.com/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+    window.location.href = cognitoLogoutUrl;
   };
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+        <Typography variant="h6" sx={{ marginTop: 2 }}>
+          Loading...
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -89,14 +118,7 @@ const App = () => {
         textAlign: "center",
       }}
     >
-      {loading ? (
-        <>
-          <CircularProgress />
-          <Typography variant="h6" sx={{ marginTop: 2 }}>
-            Loading...
-          </Typography>
-        </>
-      ) : userInfo ? (
+      {userInfo ? (
         <Card>
           <CardContent>
             <Typography variant="h4">Welcome, {userInfo.name}</Typography>
@@ -112,7 +134,20 @@ const App = () => {
           </CardContent>
         </Card>
       ) : (
-        <Typography variant="h6">Unable to fetch user information.</Typography>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Welcome to the Application
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={redirectToCognito}
+            >
+              Login with Cognito
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </Box>
   );
